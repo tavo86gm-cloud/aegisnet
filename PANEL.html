@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisNet - Cazador de Bots y Trolls</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#38bdf8">
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --danger: #ef4444; --success: #22c55e; --warning: #f59e0b; --text: #f8fafc; --muted: #94a3b8; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
+        .container { max-width: 1050px; margin: auto; }
+        header { text-align: center; margin-bottom: 20px; background: linear-gradient(135deg, #1e293b, #0f172a); padding: 20px; border-radius: 12px; border: 1px solid #334155; }
+        header h1 { color: var(--accent); margin: 0; font-size: 1.8rem; letter-spacing: 1px; text-transform: uppercase; }
+        header p { color: var(--muted); margin-top: 5px; font-size: 0.9rem; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .card { background: var(--card); padding: 12px; border-radius: 10px; text-align: center; border-left: 4px solid var(--accent); }
+        .card.warning { border-left-color: var(--warning); }
+        .card.danger { border-left-color: var(--danger); }
+        .card h3 { margin: 0; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; }
+        .card .num { font-size: 1.5rem; font-weight: bold; margin-top: 5px; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media(min-width: 768px) { .grid { grid-template-columns: 1fr 1fr; } }
+        .box { background: var(--card); padding: 18px; border-radius: 10px; border: 1px solid #334155; }
+        .box h2 { margin-top: 0; font-size: 1.1rem; border-bottom: 2px solid #334155; padding-bottom: 8px; color: #e2e8f0; }
+        label { display: block; margin: 10px 0 5px; color: var(--muted); font-size: 0.85rem; font-weight: bold; }
+        input { width: 100%; padding: 10px; background: #0f172a; color: #fff; border: 1px solid #475569; border-radius: 6px; box-sizing: border-box; }
+        .btn { background: linear-gradient(135deg, #38bdf8, #0284c7); color: #0f172a; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 15px; font-size: 1rem; }
+        .feed { max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .item { background: #0f172a; padding: 10px; border-radius: 6px; border-left: 4px solid var(--success); display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+        .item.danger { border-left-color: var(--danger); }
+        .item.warning { border-left-color: var(--warning); }
+        .badge { padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+        .badge.allow { background: rgba(34,197,94,0.2); color: var(--success); }
+        .badge.block { background: rgba(239,68,68,0.2); color: var(--danger); }
+        .badge.captcha { background: rgba(245,158,11,0.2); color: var(--warning); }
+        .ban-btn { background: none; border: 1px solid var(--danger); color: var(--danger); padding: 3px 6px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🎯 CAZADOR DE BOTS Y TROLLS</h1>
+        <p>AegisNet - Control Multi-dispositivo en Tiempo Real</p>
+    </header>
+    <div class="stats">
+        <div class="card"><h3>Analizados</h3><div class="num" id="sTotal">0</div></div>
+        <div class="card warning"><h3>En Alerta</h3><div class="num" id="sCaptcha">0</div></div>
+        <div class="card danger"><h3>Bloqueados</h3><div class="num" id="sBlocked">0</div></div>
+    </div>
+    <div class="grid">
+        <div class="box">
+            <h2>⚡ Simular Publicación</h2>
+            <label>Usuario / Cuenta:</label>
+            <input type="text" id="uId" value="usuario_sospechoso_99">
+            <label>Mensaje en Redes:</label>
+            <input type="text" id="uMsg" value="¡Urgente compartir masivamente esta noticia falsa!">
+            <label>Objetivo de la Red:</label>
+            <input type="text" id="uTarget" value="candidato_oficial">
+            <button class="btn" onclick="analizar()">Analizar Amenaza</button>
+        </div>
+        <div class="box">
+            <h2>📡 Monitoreo en Vivo de la Red</h2>
+            <div class="feed" id="feed">
+                <div style="color:var(--muted); text-align:center; padding:30px;">El sistema está activo y esperando eventos...</div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // URL PÚBLICA EN LA NUBE (Render/Railway)
+    const API_URL = 'https://aegisnet-33no.onrender.com/api/v1/analyze-event';
+
+    let tot=0, cap=0, blo=0;
+    async function analizar() {
+        const payload = {
+            user_id: document.getElementById('uId').value,
+            post_id: "p_" + Math.floor(Math.random()*10000),
+            content: document.getElementById('uMsg').value,
+            ip_address: "190.152.5." + Math.floor(Math.random()*255),
+            target_user_id: document.getElementById('uTarget').value
+        };
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+            
+            if (!res.ok) throw new Error(`Error en el motor cloud: ${res.status}`);
+
+            const r = await res.json();
+            tot++;
+            let bCls='allow', iCls='';
+            if(r.enforced_action && r.enforced_action.includes('BLOCK')) { blo++; bCls='block'; iCls='danger'; }
+            else if(r.risk_score >= 0.5) { cap++; bCls='captcha'; iCls='warning'; }
+            
+            document.getElementById('sTotal').innerText=tot;
+            document.getElementById('sCaptcha').innerText=cap;
+            document.getElementById('sBlocked').innerText=blo;
+            
+            const feed = document.getElementById('feed');
+            if(feed.innerHTML.includes('esperando')) feed.innerHTML='';
+            const div = document.createElement('div');
+            div.className = 'item ' + iCls;
+            div.innerHTML = `<div><b>${r.user_id}</b> (Riesgo: ${r.risk_score.toFixed(1)})<br><span class="badge ${bCls}">${r.enforced_action}</span></div><button class="ban-btn" onclick="this.parentElement.remove(); blo++; document.getElementById('sBlocked').innerText=blo;">Bloquear</button>`;
+            feed.prepend(div);
+        } catch(e) {
+            alert("⚠️ " + e.message);
+        }
+    }
+</script>
+</body>
+</html>
