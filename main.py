@@ -4,26 +4,27 @@ from pydantic import BaseModel
 
 app = FastAPI(
     title="AegisNet Security Backend",
-    description="Motor backend automatizado para la detección y defensa contra bots y trolls.",
+    description="Motor backend automatizado y blindado para la detección y defensa contra bots y trolls.",
     version="1.0"
 )
 
 # Configuración de CORS segura para permitir solicitudes desde la extensión y paneles autorizados
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Puedes acotarlo a dominios específicos si lo deseas
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Token Secreto de Blindaje (Debe coincidir exactamente con el configurado en la extensión)
+# Token Secreto de Blindaje (Debe coincidir exactamente con el configurado en la extensión content.js)
 SECRET_TOKEN = "AEGISNET_SECURE_TOKEN_2026_XYZ"
 
 # Estructura del cuerpo de la petición esperada
 class EventData(BaseModel):
     event_type: str = "post_analysis"
     content: str
+
 
 @app.post("/api/v1/analyze-event")
 async def analyze_event(data: EventData, x_aegis_secret_token: str = Header(None)):
@@ -69,6 +70,7 @@ async def analyze_event(data: EventData, x_aegis_secret_token: str = Header(None
         "risk_score": risk_score,
         "classification": clasificacion
     }
+
 
 @app.get("/")
 async def root():
